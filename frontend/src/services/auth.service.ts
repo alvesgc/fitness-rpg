@@ -10,13 +10,9 @@ interface LoginResponse {
 }
 
 export async function login(payload: LoginPayload): Promise<LoginResponse> {
-  const response = await apiFetch<LoginResponse>("/auth/login", {
+  return apiFetch<LoginResponse>("/auth/login", {
     method: "POST",
 
     body: JSON.stringify(payload),
   });
-
-  localStorage.setItem("accessToken", response.accessToken);
-
-  return response;
 }
