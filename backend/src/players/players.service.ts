@@ -13,6 +13,7 @@ export class PlayersService {
       data: {
         name: 'Alissongcw',
         email: 'alisson@testando.com',
+        passwordHash: 'test-password-hash',
 
         profile: {
           create: {
