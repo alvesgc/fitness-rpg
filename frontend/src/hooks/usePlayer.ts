@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { getPlayer } from "../services/player.service";
 
-export function usePlayer(id: string) {
+import { getCurrentPlayer } from "../services/player.service";
+
+export function usePlayer() {
   return useQuery({
-    queryKey: ["player", id],
-    queryFn: () => getPlayer(id),
+    queryKey: ["player", "me"],
+    queryFn: getCurrentPlayer,
   });
 }

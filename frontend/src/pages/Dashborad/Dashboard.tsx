@@ -1,10 +1,8 @@
 import { PlayerCard } from "../../components/player/PlayerCard";
 import { usePlayer } from "../../hooks/usePlayer";
 
-const PLAYER_ID = "cmtac1p1g00007slgg9zc6ed0";
-
 export function Dashboard() {
-  const { data: player, isLoading, isError } = usePlayer(PLAYER_ID);
+  const { data: player, isLoading, isError } = usePlayer();
 
   if (isLoading) {
     return (
