@@ -1,4 +1,5 @@
-import { Controller, Post, Get, Param, } from '@nestjs/common';
+import { Controller, Get, Param, Post } from '@nestjs/common';
+
 import { PlayersService } from './players.service';
 
 @Controller('players')
@@ -9,6 +10,7 @@ export class PlayersController {
   createPlayer() {
     return this.playersService.createPlayer();
   }
+
   @Get(':id')
   findPlayer(@Param('id') id: string) {
     return this.playersService.findPlayer(id);
