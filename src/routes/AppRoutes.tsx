@@ -1,5 +1,5 @@
-import {BrowserRouter, Route, Routes} from 'react-router-dom'
-import { Dashboard } from '../pages/Dashborad/Dashboard'
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Dashboard } from "../pages/Dashborad/Dashboard";
 
 export function AppRoutes() {
   return (
@@ -8,5 +8,5 @@ export function AppRoutes() {
         <Route path="/" element={<Dashboard />} />
       </Routes>
     </BrowserRouter>
-  )
+  );
 }

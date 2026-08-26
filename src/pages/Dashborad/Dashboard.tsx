@@ -1,11 +1,19 @@
+import { PlayerCard } from "../../components/player/PlayerCard";
+
 export function Dashboard() {
   return (
-    <main className="min-h-screen bg-zinc-950 text-white p-8">
-      <h1 className="text-3xl font-bold">Fitness RPG</h1>
+    <main className="min-h-screen bg-zinc-950 p-8 text-white">
+      <div className="mx-auto max-w-6xl">
+        <h1 className="mb-8 text-3xl font-bold">Fitness RPG</h1>
 
-      <p className="mt-2 text-zinc-400">
-        Seu progresso começa aqui.
-      </p>
+        <PlayerCard
+          name="Alisson"
+          level={18}
+          xp={8200}
+          xpRequired={10000}
+          rank="GOLD II"
+        />
+      </div>
     </main>
-  )
+  );
 }
