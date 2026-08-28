@@ -17,6 +17,7 @@ import { WorkoutsService } from './workouts.service';
 
 import { CreateWorkoutDto } from './dto/create-workout.dto';
 import { AddExerciseDto } from './dto/add-exercise.dto';
+import { RegisterSetDto } from './dto/register-set.dto';
 
 @Controller('workouts')
 @UseGuards(JwtAuthGuard)
@@ -64,5 +65,30 @@ export class WorkoutsController {
     const user = request['user'];
 
     return this.workoutsService.removeExercise(user.sub, workoutId, exerciseId);
+  }
+  @Post(':id/start')
+  startSession(@Req() request: Request, @Param('id') workoutId: string) {
+    const user = request['user'];
+
+    return this.workoutsService.startSession(user.sub, workoutId);
+  }
+  @Post('sessions/:sessionId/sets')
+  registerSet(
+    @Req() request: Request,
+    @Param('sessionId') sessionId: string,
+    @Body() dto: RegisterSetDto,
+  ) {
+    const user = request['user'];
+
+    return this.workoutsService.registerSet(user.sub, sessionId, dto);
+  }
+  @Post('sessions/:sessionId/finish')
+  finishSession(
+    @Req() request: Request,
+    @Param('sessionId') sessionId: string,
+  ) {
+    const user = request['user'];
+
+    return this.workoutsService.finishSession(user.sub, sessionId);
   }
 }

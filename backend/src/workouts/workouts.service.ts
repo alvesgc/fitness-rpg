@@ -8,6 +8,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 
 import { CreateWorkoutDto } from './dto/create-workout.dto';
 import { AddExerciseDto } from './dto/add-exercise.dto';
+import { RegisterSetDto } from './dto/register-set.dto';
 
 @Injectable()
 export class WorkoutsService {
@@ -151,6 +152,150 @@ export class WorkoutsService {
         workoutId_exerciseId: {
           workoutId,
           exerciseId,
+        },
+      },
+    });
+  }
+  async startSession(userId: string, workoutId: string) {
+    await this.findOne(userId, workoutId);
+
+    const existingSession = await this.prisma.workoutSession.findFirst({
+      where: {
+        userId,
+        status: 'IN_PROGRESS',
+      },
+    });
+
+    if (existingSession) {
+      throw new BadRequestException('You already have a workout in progress');
+    }
+
+    return this.prisma.workoutSession.create({
+      data: {
+        userId,
+        workoutId,
+        status: 'IN_PROGRESS',
+      },
+
+      include: {
+        workout: {
+          include: {
+            exercises: {
+              include: {
+                exercise: true,
+              },
+
+              orderBy: {
+                order: 'asc',
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+  async registerSet(userId: string, sessionId: string, dto: RegisterSetDto) {
+    const session = await this.prisma.workoutSession.findFirst({
+      where: {
+        id: sessionId,
+        userId,
+      },
+
+      include: {
+        workout: {
+          include: {
+            exercises: true,
+          },
+        },
+      },
+    });
+
+    if (!session) {
+      throw new NotFoundException('Workout session not found');
+    }
+
+    if (session.status !== 'IN_PROGRESS') {
+      throw new BadRequestException('Workout session is not in progress');
+    }
+
+    const exerciseInWorkout = session.workout.exercises.find(
+      (item) => item.exerciseId === dto.exerciseId,
+    );
+
+    if (!exerciseInWorkout) {
+      throw new BadRequestException('Exercise does not belong to this workout');
+    }
+
+    if (dto.setNumber > exerciseInWorkout.sets) {
+      throw new BadRequestException('Set number exceeds planned sets');
+    }
+
+    const existingSet = await this.prisma.workoutSet.findFirst({
+      where: {
+        sessionId,
+        exerciseId: dto.exerciseId,
+        setNumber: dto.setNumber,
+      },
+    });
+
+    if (existingSet) {
+      throw new BadRequestException('This set has already been registered');
+    }
+
+    return this.prisma.workoutSet.create({
+      data: {
+        sessionId,
+        exerciseId: dto.exerciseId,
+        setNumber: dto.setNumber,
+        weight: dto.weight,
+        repetitions: dto.repetitions,
+      },
+
+      include: {
+        exercise: true,
+      },
+    });
+  }
+  async finishSession(userId: string, sessionId: string) {
+    const session = await this.prisma.workoutSession.findFirst({
+      where: {
+        id: sessionId,
+        userId,
+      },
+
+      include: {
+        sets: true,
+      },
+    });
+
+    if (!session) {
+      throw new NotFoundException('Workout session not found');
+    }
+
+    if (session.status !== 'IN_PROGRESS') {
+      throw new BadRequestException('Workout session is not in progress');
+    }
+
+    if (session.sets.length === 0) {
+      throw new BadRequestException('Cannot finish an empty workout');
+    }
+
+    return this.prisma.workoutSession.update({
+      where: {
+        id: sessionId,
+      },
+
+      data: {
+        status: 'COMPLETED',
+        completedAt: new Date(),
+      },
+
+      include: {
+        workout: true,
+        sets: {
+          include: {
+            exercise: true,
+          },
         },
       },
     });
