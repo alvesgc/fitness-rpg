@@ -1,11 +1,16 @@
 import { PlayerCard } from "../../components/player/PlayerCard";
 import { usePlayer } from "../../hooks/usePlayer";
+import { useXp } from "../../hooks/useXp";
 import { useAuth } from "../../context/AuthContext";
 
 export function Dashboard() {
   const { data: player, isLoading, isError } = usePlayer();
+
+  const { data: xp, isLoading: isXpLoading, isError: isXpError } = useXp();
+
   const { logout } = useAuth();
-  if (isLoading) {
+
+  if (isLoading || isXpLoading) {
     return (
       <main className="min-h-screen bg-zinc-950 p-8 text-white">
         <div className="mx-auto max-w-6xl">
@@ -25,6 +30,18 @@ export function Dashboard() {
     );
   }
 
+  if (isXpError || !xp) {
+    return (
+      <main className="min-h-screen bg-zinc-950 p-8 text-white">
+        <div className="mx-auto max-w-6xl">
+          <p className="text-red-400">
+            Não foi possível carregar os dados de XP.
+          </p>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-zinc-950 p-8 text-white">
       <div className="mx-auto max-w-6xl">
@@ -32,18 +49,21 @@ export function Dashboard() {
 
         <PlayerCard
           name={player.name}
-          level={player.progression.level}
-          xp={player.progression.currentXp}
-          xpRequired={player.progression.xpToNextLevel}
+          level={xp.level}
+          xp={xp.xpInLevel}
+          xpRequired={xp.xpNeeded}
           rank={player.rank.name}
         />
+
+        <div className="mt-6 flex justify-end">
+          <button
+            onClick={logout}
+            className="rounded-lg border border-zinc-700 px-4 py-2 text-sm hover:bg-zinc-800"
+          >
+            Sair
+          </button>
+        </div>
       </div>
-      <button
-        onClick={logout}
-        className="rounded-lg border border-zinc-700 px-4 py-2 text-sm hover:bg-zinc-800"
-      >
-        Sair
-      </button>
     </main>
   );
 }
