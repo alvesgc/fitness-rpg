@@ -2,14 +2,12 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { login as loginRequest } from "../../services/auth.service";
+import { register as registerRequest } from "../../services/auth.service";
 
-import { useAuth } from "../../context/AuthContext";
-
-export function Login() {
+export function Register() {
   const navigate = useNavigate();
-  const { login } = useAuth();
 
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -23,16 +21,17 @@ export function Login() {
     setLoading(true);
 
     try {
-      const response = await loginRequest({
+      await registerRequest({
+        name,
         email,
         password,
       });
 
-      login(response.accessToken);
-
-      navigate("/dashboard");
-    } catch {
-      setError("Email ou senha inválidos.");
+      navigate("/login");
+    } catch (error) {
+      setError(
+        "Não foi possível criar a conta. Verifique os dados e tente novamente.",
+      );
     } finally {
       setLoading(false);
     }
@@ -45,7 +44,7 @@ export function Login() {
           <h1 className="text-4xl font-bold">Fitness RPG</h1>
 
           <p className="mt-2 text-zinc-400">
-            Entre para continuar sua jornada.
+            Crie seu personagem e comece sua jornada.
           </p>
         </div>
 
@@ -53,6 +52,21 @@ export function Login() {
           onSubmit={handleSubmit}
           className="space-y-5 rounded-2xl border border-zinc-800 bg-zinc-900 p-6"
         >
+          <div>
+            <label htmlFor="name" className="mb-2 block text-sm font-medium">
+              Nome
+            </label>
+
+            <input
+              id="name"
+              type="text"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              required
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3 outline-none focus:border-zinc-500"
+            />
+          </div>
+
           <div>
             <label htmlFor="email" className="mb-2 block text-sm font-medium">
               Email
@@ -82,6 +96,7 @@ export function Login() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               required
+              minLength={6}
               className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3 outline-none focus:border-zinc-500"
             />
           </div>
@@ -93,12 +108,13 @@ export function Login() {
             disabled={loading}
             className="w-full rounded-lg bg-white px-4 py-3 font-semibold text-black transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? "Entrando..." : "Entrar"}
+            {loading ? "Criando conta..." : "Criar conta"}
           </button>
+
           <div className="text-center text-sm text-zinc-400">
-            Ainda não possui uma conta?{" "}
-            <Link to="/register" className="text-white hover:underline">
-              Criar conta
+            Já possui uma conta?{" "}
+            <Link to="/login" className="text-white hover:underline">
+              Entrar
             </Link>
           </div>
         </form>
