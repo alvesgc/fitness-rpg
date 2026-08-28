@@ -1,30 +1,21 @@
-const API_URL = import.meta.env.VITE_API_URL;
+import axios from "axios";
 
-export async function apiFetch<T>(
-  endpoint: string,
-  options?: RequestInit,
-): Promise<T> {
+const API_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+export const api = axios.create({
+  baseURL: API_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+api.interceptors.request.use((config) => {
   const token = localStorage.getItem("accessToken");
 
-  const response = await fetch(`${API_URL}${endpoint}`, {
-    ...options,
-
-    headers: {
-      "Content-Type": "application/json",
-
-      ...(token
-        ? {
-            Authorization: `Bearer ${token}`,
-          }
-        : {}),
-
-      ...options?.headers,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`API error: ${response.status}`);
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
 
-  return response.json();
-}
+  return config;
+});

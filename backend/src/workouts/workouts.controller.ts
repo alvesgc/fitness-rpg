@@ -37,7 +37,12 @@ export class WorkoutsController {
 
     return this.workoutsService.findAll(user.sub);
   }
+  @Get('sessions/:sessionId')
+  getSession(@Req() request: Request, @Param('sessionId') sessionId: string) {
+    const user = request['user'];
 
+    return this.workoutsService.getSession(user.sub, sessionId);
+  }
   @Get(':id')
   findOne(@Req() request: Request, @Param('id') workoutId: string) {
     const user = request['user'];

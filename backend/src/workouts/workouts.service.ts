@@ -300,4 +300,49 @@ export class WorkoutsService {
       },
     });
   }
+  async getSession(userId: string, sessionId: string) {
+    const session = await this.prisma.workoutSession.findFirst({
+      where: {
+        id: sessionId,
+        userId,
+      },
+
+      include: {
+        workout: {
+          include: {
+            exercises: {
+              include: {
+                exercise: true,
+              },
+
+              orderBy: {
+                order: 'asc',
+              },
+            },
+          },
+        },
+
+        sets: {
+          include: {
+            exercise: true,
+          },
+
+          orderBy: [
+            {
+              exerciseId: 'asc',
+            },
+            {
+              setNumber: 'asc',
+            },
+          ],
+        },
+      },
+    });
+
+    if (!session) {
+      throw new NotFoundException('Workout session not found');
+    }
+
+    return session;
+  }
 }

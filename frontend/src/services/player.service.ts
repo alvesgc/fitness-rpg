@@ -1,8 +1,9 @@
-import { apiFetch } from "./api";
+import { api } from "./api";
 import type { Player } from "../domain/player/player.types";
 
 export async function getCurrentPlayer(): Promise<Player> {
-  return apiFetch<Player>("/players/me");
+  const response = await api.get<Player>("/players/me");
+  return response.data;
 }
 
 export interface AddXpPayload {
@@ -12,9 +13,6 @@ export interface AddXpPayload {
 }
 
 export async function addPlayerXp(id: string, payload: AddXpPayload) {
-  return apiFetch(`/players/${id}/xp`, {
-    method: "POST",
-
-    body: JSON.stringify(payload),
-  });
+  const response = await api.post(`/players/${id}/xp`, payload);
+  return response.data;
 }

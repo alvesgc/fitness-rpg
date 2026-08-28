@@ -1,4 +1,4 @@
-import { apiFetch } from "./api";
+import { api } from "./api";
 
 interface LoginPayload {
   email: string;
@@ -22,17 +22,13 @@ interface RegisterResponse {
 }
 
 export async function login(payload: LoginPayload): Promise<LoginResponse> {
-  return apiFetch<LoginResponse>("/auth/login", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+  const { data } = await api.post<LoginResponse>("/auth/login", payload);
+  return data;
 }
 
 export async function register(
   payload: RegisterPayload,
 ): Promise<RegisterResponse> {
-  return apiFetch<RegisterResponse>("/auth/register", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+  const { data } = await api.post<RegisterResponse>("/auth/register", payload);
+  return data;
 }
