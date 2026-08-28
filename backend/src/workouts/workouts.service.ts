@@ -299,6 +299,7 @@ export class WorkoutsService {
 
       include: {
         workout: true,
+
         sets: {
           include: {
             exercise: true,
@@ -307,7 +308,7 @@ export class WorkoutsService {
       },
     });
 
-    const xpResult = await this.xpService.addXp(
+    const xp = await this.xpService.addXp(
       userId,
       100,
       'WORKOUT_COMPLETED',
@@ -318,7 +319,7 @@ export class WorkoutsService {
 
     return {
       session: completedSession,
-      xp: xpResult,
+      xp,
     };
   }
 

@@ -24,11 +24,11 @@ export class XpService {
     return profile;
   }
 
-  getRequiredXpForNextLevel(level: number) {
+  getRequiredXpForNextLevel(level: number): number {
     return 500 * level;
   }
 
-  getLevelFromXp(totalXp: number) {
+  getLevelFromXp(totalXp: number): number {
     let level = 1;
     let xpSpent = 0;
 
@@ -48,6 +48,9 @@ export class XpService {
     referenceType?: string,
     referenceId?: string,
   ) {
+    /*
+     * Verifica se este evento já concedeu XP.
+     */
     if (referenceType && referenceId) {
       const existingTransaction = await this.prisma.xPTransaction.findFirst({
         where: {
@@ -59,11 +62,18 @@ export class XpService {
       });
 
       if (existingTransaction) {
+        const profile = await this.getProfile(userId);
+
+        const level = this.getLevelFromXp(profile.totalXp);
+
         return {
           transaction: existingTransaction,
-          profile: await this.getProfile(userId),
+          profile,
           xpGained: 0,
+          oldLevel: level,
+          newLevel: level,
           leveledUp: false,
+          alreadyAwarded: true,
         };
       }
     }
@@ -72,6 +82,9 @@ export class XpService {
 
     const oldLevel = this.getLevelFromXp(profile.totalXp);
 
+    /*
+     * Registra a transação de XP.
+     */
     const transaction = await this.prisma.xPTransaction.create({
       data: {
         userId,
@@ -83,6 +96,9 @@ export class XpService {
       },
     });
 
+    /*
+     * Atualiza o XP total do jogador.
+     */
     const updatedProfile = await this.prisma.playerProfile.update({
       where: {
         userId,
@@ -98,12 +114,13 @@ export class XpService {
     const newLevel = this.getLevelFromXp(updatedProfile.totalXp);
 
     return {
-      profile: updatedProfile,
       transaction,
+      profile: updatedProfile,
       xpGained: amount,
       oldLevel,
       newLevel,
       leveledUp: newLevel > oldLevel,
+      alreadyAwarded: false,
     };
   }
 
@@ -124,7 +141,8 @@ export class XpService {
 
     const xpNeeded = nextLevelXp - currentLevelXp;
 
-    const progress = Math.floor((xpInLevel / xpNeeded) * 100);
+    const progress =
+      xpNeeded > 0 ? Math.floor((xpInLevel / xpNeeded) * 100) : 0;
 
     return {
       totalXp: profile.totalXp,
