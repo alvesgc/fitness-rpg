@@ -24,13 +24,53 @@ export class XpService {
     return profile;
   }
 
+  getRequiredXpForNextLevel(level: number) {
+    return 500 * level;
+  }
+
+  getLevelFromXp(totalXp: number) {
+    let level = 1;
+    let xpSpent = 0;
+
+    while (totalXp >= xpSpent + this.getRequiredXpForNextLevel(level)) {
+      xpSpent += this.getRequiredXpForNextLevel(level);
+      level++;
+    }
+
+    return level;
+  }
+
   async addXp(
     userId: string,
     amount: number,
     type: string,
     description: string,
+    referenceType?: string,
+    referenceId?: string,
   ) {
+    if (referenceType && referenceId) {
+      const existingTransaction = await this.prisma.xPTransaction.findFirst({
+        where: {
+          userId,
+          type,
+          referenceType,
+          referenceId,
+        },
+      });
+
+      if (existingTransaction) {
+        return {
+          transaction: existingTransaction,
+          profile: await this.getProfile(userId),
+          xpGained: 0,
+          leveledUp: false,
+        };
+      }
+    }
+
     const profile = await this.getProfile(userId);
+
+    const oldLevel = this.getLevelFromXp(profile.totalXp);
 
     const transaction = await this.prisma.xPTransaction.create({
       data: {
@@ -38,6 +78,8 @@ export class XpService {
         amount,
         type,
         description,
+        referenceType,
+        referenceId,
       },
     });
 
@@ -53,25 +95,18 @@ export class XpService {
       },
     });
 
+    const newLevel = this.getLevelFromXp(updatedProfile.totalXp);
+
     return {
       profile: updatedProfile,
       transaction,
+      xpGained: amount,
+      oldLevel,
+      newLevel,
+      leveledUp: newLevel > oldLevel,
     };
   }
-  getRequiredXpForNextLevel(level: number) {
-    return 500 * level;
-  }
-  getLevelFromXp(totalXp: number) {
-    let level = 1;
-    let xpSpent = 0;
 
-    while (totalXp >= xpSpent + this.getRequiredXpForNextLevel(level)) {
-      xpSpent += this.getRequiredXpForNextLevel(level);
-      level++;
-    }
-
-    return level;
-  }
   async getStatus(userId: string) {
     const profile = await this.getProfile(userId);
 

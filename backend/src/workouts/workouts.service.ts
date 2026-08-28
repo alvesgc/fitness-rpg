@@ -307,14 +307,19 @@ export class WorkoutsService {
       },
     });
 
-    await this.xpService.addXp(
+    const xpResult = await this.xpService.addXp(
       userId,
       100,
       'WORKOUT_COMPLETED',
       'Treino concluído',
+      'WORKOUT_SESSION',
+      sessionId,
     );
 
-    return completedSession;
+    return {
+      session: completedSession,
+      xp: xpResult,
+    };
   }
 
   async getSession(userId: string, sessionId: string) {

@@ -72,6 +72,8 @@ model XPTransaction {
 
   @@index([userId])
   @@map("xp_transactions")
+  referenceType String?
+  referenceId   String?
 }
 
 model Exercise {
