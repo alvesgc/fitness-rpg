@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 
 import { PrismaService } from '../../prisma/prisma.service';
+import { XpService } from '../xp/xp.service';
 
 import { CreateWorkoutDto } from './dto/create-workout.dto';
 import { AddExerciseDto } from './dto/add-exercise.dto';
@@ -12,7 +13,10 @@ import { RegisterSetDto } from './dto/register-set.dto';
 
 @Injectable()
 export class WorkoutsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly xpService: XpService,
+  ) {}
 
   async create(userId: string, dto: CreateWorkoutDto) {
     return this.prisma.workout.create({
@@ -156,6 +160,7 @@ export class WorkoutsService {
       },
     });
   }
+
   async startSession(userId: string, workoutId: string) {
     await this.findOne(userId, workoutId);
 
@@ -194,6 +199,7 @@ export class WorkoutsService {
       },
     });
   }
+
   async registerSet(userId: string, sessionId: string, dto: RegisterSetDto) {
     const session = await this.prisma.workoutSession.findFirst({
       where: {
@@ -256,6 +262,7 @@ export class WorkoutsService {
       },
     });
   }
+
   async finishSession(userId: string, sessionId: string) {
     const session = await this.prisma.workoutSession.findFirst({
       where: {
@@ -280,7 +287,7 @@ export class WorkoutsService {
       throw new BadRequestException('Cannot finish an empty workout');
     }
 
-    return this.prisma.workoutSession.update({
+    const completedSession = await this.prisma.workoutSession.update({
       where: {
         id: sessionId,
       },
@@ -299,7 +306,17 @@ export class WorkoutsService {
         },
       },
     });
+
+    await this.xpService.addXp(
+      userId,
+      100,
+      'WORKOUT_COMPLETED',
+      'Treino concluído',
+    );
+
+    return completedSession;
   }
+
   async getSession(userId: string, sessionId: string) {
     const session = await this.prisma.workoutSession.findFirst({
       where: {

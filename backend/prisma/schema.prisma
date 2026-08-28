@@ -6,44 +6,6 @@ datasource db {
   provider = "postgresql"
 }
 
-model User {
-  id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  passwordHash String
-
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  profile        PlayerProfile?
-  xpTransactions XPTransaction[]
-
-  workouts       Workout[]
-  workoutSessions WorkoutSession[]
-}
-
-model PlayerProfile {
-  id            String @id @default(cuid())
-  userId        String @unique
-  totalXp       Int    @default(0)
-  currentStreak Int    @default(0)
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model XPTransaction {
-  id          String   @id @default(cuid())
-  userId      String
-  amount      Int
-  type        String
-  description String
-  createdAt   DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-}
-
 enum WorkoutSessionStatus {
   IN_PROGRESS
   COMPLETED
@@ -65,6 +27,53 @@ enum MuscleGroup {
   FULL_BODY
 }
 
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile        PlayerProfile?
+  xpTransactions XPTransaction[]
+
+  workouts Workout[]
+  sessions WorkoutSession[]
+
+  @@map("users")
+}
+
+model PlayerProfile {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  level         Int      @default(1)
+  totalXp       Int      @default(0)
+  currentStreak Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("player_profiles")
+}
+
+model XPTransaction {
+  id          String   @id @default(cuid())
+  userId      String
+  amount      Int
+  type        String
+  description String
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("xp_transactions")
+}
+
 model Exercise {
   id           String      @id @default(cuid())
   name         String
@@ -74,78 +83,85 @@ model Exercise {
   equipment    String?
   videoUrl     String?
 
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  workoutExercises WorkoutExercise[]
-  workoutSets      WorkoutSet[]
+  workouts WorkoutExercise[]
+  sets     WorkoutSet[]
+
+  @@map("exercises")
 }
 
 model Workout {
   id          String   @id @default(cuid())
+  userId      String
   name        String
   description String?
 
-  userId      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  user        User @relation(fields: [userId], references: [id])
+  exercises WorkoutExercise[]
+  sessions  WorkoutSession[]
 
-  exercises   WorkoutExercise[]
-  sessions    WorkoutSession[]
-}
-
-model WorkoutSession {
-  id          String               @id @default(cuid())
-
-  userId      String
-  workoutId   String
-
-  startedAt   DateTime             @default(now())
-  completedAt DateTime?
-
-  status      WorkoutSessionStatus @default(IN_PROGRESS)
-
-  user        User                 @relation(fields: [userId], references: [id])
-  workout     Workout              @relation(fields: [workoutId], references: [id])
-
-  sets        WorkoutSet[]
-}
-
-model WorkoutSet {
-  id          String   @id @default(cuid())
-
-  sessionId   String
-  exerciseId  String
-
-  setNumber   Int
-  weight      Float?
-  repetitions Int
-
-  completedAt DateTime @default(now())
-
-  session     WorkoutSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  exercise    Exercise       @relation(fields: [exerciseId], references: [id])
+  @@index([userId])
+  @@map("workouts")
 }
 
 model WorkoutExercise {
   id          String @id @default(cuid())
-
   workoutId   String
   exerciseId  String
 
   order       Int
-
   sets        Int
   minReps     Int?
   maxReps     Int?
-
   restSeconds Int?
 
-  workout     Workout  @relation(fields: [workoutId], references: [id], onDelete: Cascade)
-  exercise    Exercise @relation(fields: [exerciseId], references: [id])
+  workout  Workout  @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
 
   @@unique([workoutId, exerciseId])
+  @@index([workoutId])
+  @@index([exerciseId])
+  @@map("workout_exercises")
+}
+
+model WorkoutSession {
+  id          String               @id @default(cuid())
+  userId      String
+  workoutId   String
+  status      WorkoutSessionStatus @default(IN_PROGRESS)
+  startedAt   DateTime             @default(now())
+  completedAt DateTime?
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workout Workout @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+
+  sets WorkoutSet[]
+
+  @@index([userId])
+  @@index([workoutId])
+  @@map("workout_sessions")
+}
+
+model WorkoutSet {
+  id          String   @id @default(cuid())
+  sessionId   String
+  exerciseId  String
+  setNumber   Int
+  weight      Float?
+  repetitions Int
+  completedAt DateTime @default(now())
+
+  session  WorkoutSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  exercise Exercise       @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, exerciseId, setNumber])
+  @@index([sessionId])
+  @@index([exerciseId])
+  @@map("workout_sets")
 }

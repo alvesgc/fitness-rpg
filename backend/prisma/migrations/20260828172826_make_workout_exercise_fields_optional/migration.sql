@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "WorkoutExercise" ALTER COLUMN "minReps" DROP NOT NULL,
+ALTER COLUMN "maxReps" DROP NOT NULL,
+ALTER COLUMN "restSeconds" DROP NOT NULL;

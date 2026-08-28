@@ -7,8 +7,10 @@ import { PrismaService } from '../../prisma/prisma.service';
 
 import { AuthModule } from '../auth/auth.module';
 
+import { XpModule } from '../xp/xp.module';
+
 @Module({
-  imports: [AuthModule],
+  imports: [AuthModule, XpModule],
 
   controllers: [WorkoutsController],
 
